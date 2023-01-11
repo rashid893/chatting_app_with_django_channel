@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+</head>
+  <title>Chat App</title>
+</head>
+
+<body>
+  <h1>Group Name: {{groupname}}</h1>
+  <div class="container">
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="form-group">
+
+           
+            <textarea id="chat-log" cols="30" rows="10" class="form-control">
+                {% for chat in chats %}
+                  {{chat.content}}
+                {% endfor %}
+              </textarea><br>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <input type="text" id="chat-message-input" class="form-control"size="100"  required placeholder="Enter messages"><br>
+                </div>
+            </div>
+
+            
+              <input type="button" value="Send" id="chat-message-submit" class="btn btn-success">
+
+        </div>
+    </div>"
+  </div>
+  
+  {{groupname|json_script:"group-name"}}
+
+  <script>
+    const groupName = JSON.parse(document.getElementById('group-name').textContent)
+    console.log(groupName)
+    var ws = new WebSocket(
+      'ws://'
+      + window.location.host
+      + '/ws/sc/'
+      + groupName
+      + '/'
+    )
+    ws.onopen = function () {
+      console.log('Websocket Connection open...')
+    }
+    ws.onmessage = function (event) {
+      console.log('Message Received from Server...', event.data)
+      console.log('Type of Message Received from Server...', typeof (event.data))
+      const data = JSON.parse(event.data)   // String to Object
+      console.log('Parsed Data...', data)
+      console.log('Type of Parsed Data...', typeof (data))
+      console.log('Actual Message...', data.msg)
+      document.querySelector('#chat-log').value += (data.user + ':' + data.msg + '\n')
+     // document.querySelector('#chat-log').value += (data.msg + '\n')
+     // document.querySelector('#chat-log').value += (data.msg + '\n')
+    }
+    ws.onclose = function (event) {
+      console.error('Websocket Connection closed unexpectedly...');
+    };
+
+    document.getElementById('chat-message-submit').onclick = function (event) {
+      const messageInputDom = document.getElementById('chat-message-input')
+      const message = messageInputDom.value
+      ws.send(JSON.stringify({      // Object to String
+        'msg': message
+      }))
+      messageInputDom.value = ''
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+</body>
+
+</html>
